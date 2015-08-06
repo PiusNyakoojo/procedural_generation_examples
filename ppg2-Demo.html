@@ -1,0 +1,137 @@
+<html>
+<head>
+	<title></title>
+	<script src='js/three.js'></script>
+	<script src='js/PlayerControls.js'></script>
+	<script src="js/DDSLoader.js"></script>
+	<script src="js/MTLLoader.js"></script>
+	<script src="js/OBJMTLLoader.js"></script>
+	<script src='js/ppg2.js'></script>
+</head>
+<style>
+body {
+	margin: 0px;
+	overflow: hidden;
+}
+</style>
+<body>
+
+	<div id='container'></div>
+	<script>
+		var container, scene, camera, renderer;
+
+		var controls, loader, player = new THREE.Group();
+
+		init();
+		animate();
+
+		function init() {
+
+			// Setup
+			container = document.getElementById( 'container' );
+
+			scene = new THREE.Scene();
+
+			camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 500000 );
+			camera.position.z = 3;
+
+			renderer = new THREE.WebGLRenderer( { alpha: true, logarithmicDepthBuffer: true } );
+			renderer.setSize( window.innerWidth, window.innerHeight);
+
+
+			var light = new THREE.AmbientLight( 0x404040 ); // soft white light
+			light.position.y = 3;
+			scene.add( light );
+
+			var directionalLight = new THREE.DirectionalLight(0xffffff);
+			player.add( directionalLight );
+
+			// Player
+			loadPlayerModel(); // comment out if no model
+
+			controls = new THREE.PlayerControls( camera, player );
+			controls.init( Math.PI );
+			controls.moveSpeed = 5;
+
+			scene.add( player );
+
+			// Stars
+			loadStars();
+
+			// Procedural Generation
+			initGrid( player.position.x, player.position.z );
+
+			// Events
+			controls.addEventListener( 'change', render );
+			window.addEventListener( 'resize', onWindowResize, false );
+
+			//Final Touches
+			container.appendChild( renderer.domElement );
+			document.body.appendChild( container );
+		}
+
+		function animate() {
+			requestAnimationFrame( animate );
+			controls.update();
+			render();
+		}
+
+		function render() {
+			
+			if ( playerUnitChanged( player.position.x, player.position.z ) )
+				generateGrid();
+
+        	renderer.clear();
+			renderer.render( scene , camera );
+		}
+
+		function loadPlayerModel() {
+
+			var onProgress = function ( xhr ) {
+				if ( xhr.lengthComputable ) {
+					var percentComplete = xhr.loaded / xhr.total * 100;
+					//console.log( Math.round(percentComplete, 2) + '% downloaded' );
+				}
+			};
+
+			var onError = function ( xhr ) {
+			};
+
+
+			THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
+
+			var loader = new THREE.OBJMTLLoader();
+			loader.load( '../Ship/Starship/ship.obj', '../Ship/Starship/ship.mtl', function ( object ) {
+
+				object.position.y -= 2.5;
+				object.rotation.y += Math.PI;
+
+				object.scale.x = 0.01;
+				object.scale.z = 0.01;
+				object.scale.y = 0.01;
+
+				player.add( object );
+
+			}, onProgress, onError );
+		}
+
+		function loadStars() {
+			var geometry = new THREE.SphereGeometry(100000, 32, 32);
+			var material = new THREE.MeshBasicMaterial();
+			var texture = THREE.ImageUtils.loadTexture("images/starfield.png");
+			texture.minFilter = THREE.NearestFilter;
+			material.map = texture;
+			material.side = THREE.BackSide;
+			var mesh = new THREE.Mesh( geometry, material );
+			scene.add(mesh);
+		}
+
+		function onWindowResize() {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			
+			renderer.setSize( window.innerWidth, window.innerHeight );
+		}
+	</script>
+</body>
+</html>
