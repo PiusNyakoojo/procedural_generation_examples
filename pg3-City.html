@@ -1,0 +1,88 @@
+<html>
+<head>
+	<title></title>
+	<script src='js/three.js'></script>
+	<script src='js/PlayerControls.js'></script>
+	<script src='js/pg3.js'></script>
+</head>
+<style>
+body {
+	margin: 0px;
+	overflow: hidden;
+}
+</style>
+<body>
+
+	<div id='container'></div>
+	<script>
+		var container, scene, camera, renderer;
+
+		var controls, player;
+
+		init();
+		animate();
+
+		function init() {
+
+			// Setup
+			container = document.getElementById( 'container' );
+
+			scene = new THREE.Scene();
+
+			camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 100000 );
+			camera.position.z = 3;
+
+			renderer = new THREE.WebGLRenderer( { alpha: true} );
+			renderer.setSize( window.innerWidth, window.innerHeight);
+
+
+			var light = new THREE.AmbientLight( 0x404040 ); // soft white light
+			light.position.y = 3;
+			scene.add( light );
+
+			// Player
+			var cube_geometry = new THREE.BoxGeometry( 1, 1, 1 );
+			var cube_material = new THREE.MeshBasicMaterial( {color: 0x7777ff, wireframe: false} );
+			player = new THREE.Mesh( cube_geometry, cube_material );
+
+			controls = new THREE.PlayerControls( camera, player );
+			controls.init( Math.PI / 2 );
+			//controls.moveSpeed = 5;
+			scene.add( player );
+
+			// Procedural Generation
+			initGrid( player.position.x, player.position.z );
+
+			// Events
+			controls.addEventListener( 'change', render );
+			window.addEventListener( 'resize', onWindowResize, false );
+
+			//Final Touches
+			container.appendChild( renderer.domElement );
+			document.body.appendChild( container );
+		}
+
+		function animate() {
+			requestAnimationFrame( animate );
+			controls.update();
+			render();
+		}
+
+		function render() {
+
+			if ( playerUnitChanged( player.position.x, player.position.z ) )
+				generateGrid();
+
+        	renderer.clear();
+			renderer.render( scene , camera );
+		}
+
+		function onWindowResize() {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			
+			renderer.setSize( window.innerWidth, window.innerHeight );
+		}
+	</script>
+</body>
+</html>

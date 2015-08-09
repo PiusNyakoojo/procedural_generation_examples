@@ -1,2 +1,2 @@
-# Procedural Planet Generation
-Template for procedurally generating planets.
+# Procedural Generation with Three.js
+Template for procedurally generating stuff with three.js.
