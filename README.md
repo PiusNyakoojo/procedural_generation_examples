@@ -1,2 +1,2 @@
-# Procedural Generation with Three.js
-Template for procedurally generating stuff with three.js.
+# Procedural Generation Examples with Three.js
+Templates for procedurally generating stuff with three.js.
